@@ -11,17 +11,18 @@ import (
 func Test_HealthCheck(t *testing.T) {
 	var app application
 
-	req := httptest.NewRequest("GET", "/v1/healthcheck", nil)
-	rr := httptest.NewRecorder()
-	handler := http.HandlerFunc(app.healthcheckHandler)
-	handler.ServeHTTP(rr, req)
+	w := httptest.NewRecorder()
+	r := httptest.NewRequest("GET", "/v1/healthcheck", nil)
 
-	body, err := io.ReadAll(rr.Body)
+	handler := http.HandlerFunc(app.healthcheckHandler)
+	handler.ServeHTTP(w, r)
+
+	sut, err := io.ReadAll(w.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(body), "status: available") {
-		t.Errorf("got %s; expected 'status: available'", string(body))
+	if !strings.Contains(string(sut), "status: available") {
+		t.Errorf("got %s; expected 'status: available'", string(sut))
 	}
 }
