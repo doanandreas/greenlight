@@ -13,38 +13,38 @@ import (
 func Test_HealthCheck(t *testing.T) {
 	var app application
 
-	w := httptest.NewRecorder()
+	sut := httptest.NewRecorder()
 	r := httptest.NewRequest("GET", "/v1/healthcheck", nil)
 
 	handler := http.HandlerFunc(app.healthcheckHandler)
-	handler.ServeHTTP(w, r)
+	handler.ServeHTTP(sut, r)
 
-	sut, err := io.ReadAll(w.Body)
+	body, err := io.ReadAll(sut.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(sut), "status: available") {
-		t.Errorf("got %s; expected 'status: available'", string(sut))
+	if !strings.Contains(string(body), "status: available") {
+		t.Errorf("got %s; expected 'status: available'", string(body))
 	}
 }
 
 func Test_CreateMovie(t *testing.T) {
 	var app application
 
-	w := httptest.NewRecorder()
+	sut := httptest.NewRecorder()
 	r := httptest.NewRequest("POST", "/v1/movies", nil)
 
 	handler := http.HandlerFunc(app.createMovieHandler)
-	handler.ServeHTTP(w, r)
+	handler.ServeHTTP(sut, r)
 
-	sut, err := io.ReadAll(w.Body)
+	body, err := io.ReadAll(sut.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(sut), "create a new movie") {
-		t.Errorf("got %s; expected 'create a new movie'", string(sut))
+	if !strings.Contains(string(body), "create a new movie") {
+		t.Errorf("got %s; expected 'create a new movie'", string(body))
 	}
 }
 
