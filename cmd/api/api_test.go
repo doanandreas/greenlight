@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
+	"greenlight.doanandreas.net/internal/data"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -24,8 +27,14 @@ func Test_HealthCheck(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.Contains(string(body), "status: available") {
-		t.Errorf("got %s; expected 'status: available'", string(body))
+	var js healthCheck
+	err = json.Unmarshal(body, &js)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if js.Status != "available" {
+		t.Errorf("got %s; expected 'available'", js.Status)
 	}
 }
 
@@ -50,14 +59,13 @@ func Test_CreateMovie(t *testing.T) {
 
 func Test_ShowMovie(t *testing.T) {
 	tests := []struct {
-		name          string
-		id            string
-		eStatusCode   int
-		eResponseBody string
+		name        string
+		id          string
+		eStatusCode int
 	}{
-		{"positive integer", "2", 200, "movie 2"},
-		{"negative integer", "-3", 404, ""},
-		{"non integer", "x13a1g", 404, ""},
+		{"positive integer", "2", 200},
+		{"negative integer", "-3", 404},
+		{"non integer", "x13a1g", 404},
 	}
 
 	for _, tt := range tests {
@@ -83,8 +91,19 @@ func Test_ShowMovie(t *testing.T) {
 				t.Errorf("got '%d'; expected '%d'", sut.Result().StatusCode, tt.eStatusCode)
 			}
 
-			if !strings.Contains(string(body), tt.eResponseBody) {
-				t.Errorf("got '%s'; expected '%s'", string(body), tt.eResponseBody)
+			if sut.Result().StatusCode == http.StatusNotFound {
+				return
+			}
+
+			var js map[string]data.Movie
+			err = json.Unmarshal(body, &js)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			expectedId, err := strconv.ParseInt(tt.id, 10, 64)
+			if err != nil && js["movie"].ID != expectedId {
+				t.Errorf("got '%d'; expected '%d'", js["movie"].ID, expectedId)
 			}
 		})
 	}
