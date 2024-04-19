@@ -5,21 +5,26 @@ import (
 )
 
 type healthCheck struct {
-	Status      string `json:"status"`
+	Status     string     `json:"status"`
+	SystemInfo systemInfo `json:"system_info"`
+}
+
+type systemInfo struct {
 	Environment string `json:"environment"`
 	Version     string `json:"version"`
 }
 
-func (app *application) healthcheckHandler(w http.ResponseWriter, _ *http.Request) {
+func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	data := healthCheck{
-		Status:      "available",
-		Environment: app.config.env,
-		Version:     version,
+		Status: "available",
+		SystemInfo: systemInfo{
+			Environment: app.config.env,
+			Version:     version,
+		},
 	}
 
 	err := app.writeJSON(w, http.StatusOK, data, nil)
 	if err != nil {
-		app.logger.Println(err)
-		http.Error(w, "The server encountered a problem and could not process your request", http.StatusInternalServerError)
+		app.serverErrorResponse(w, r, err)
 	}
 }
